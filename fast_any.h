@@ -33,20 +33,21 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace fast_any
 {
 
-using fast_any_type = unsigned int;
-inline fast_any_type type_id_seq = 0;
+using type_info = unsigned int;
+inline type_info type_info_seq = 0;
 template <typename T>
-inline const fast_any_type type_id = type_id_seq++;
+inline const type_info type_id = type_info_seq++;
 
-class fast_any final
+class any final
 {
 public:
-    fast_any( const fast_any& ) = delete;
-    fast_any& operator=( const fast_any& ) = delete;
+    inline any();
+    inline ~any();
 
-    inline fast_any();
-    inline fast_any( fast_any&& );
-    inline ~fast_any();
+    inline any( const any& other );
+    inline any( any&& other );
+    inline any& operator=( const any& other );
+    inline any& operator=( any&& other );
 
     inline bool has_value() const;
 
@@ -59,13 +60,14 @@ public:
     template <typename T>
     inline void emplace( T&& value );
 
-    inline void emplace( const fast_any& other );
+    inline void emplace( const any& other );
+    inline void emplace( any&& other );
 
-    inline void swap( fast_any& other );
+    inline void swap( any& other );
 
     inline void reset();
 
-    inline fast_any_type type() const;
+    inline const type_info& type() const;
 
 private:
     struct _value_holder
@@ -102,7 +104,7 @@ private:
             value = ( (_value<T>*)value_holder )->value;
         }
 
-        const fast_any_type type;
+        const type_info type;
         T value;
     };
 
@@ -110,24 +112,42 @@ private:
     bool _has_value = false;
 };
 
-inline fast_any::fast_any() = default;
+inline any::any() = default;
 
-inline fast_any::fast_any( fast_any&& )
-{
-}
-
-inline fast_any::~fast_any()
+inline any::~any()
 {
     delete _value_holder;
 }
 
-inline bool fast_any::has_value() const
+inline any::any( const any& other )
+{
+    emplace( other );
+}
+
+inline any::any( any&& other )
+{
+    emplace( std::move( other ) );
+}
+
+inline any& any::operator=( const any& other )
+{
+    emplace( other );
+    return *this;
+}
+
+inline any& any::operator=( any&& other )
+{
+    emplace( std::move( other ) );
+    return *this;
+}
+
+inline bool any::has_value() const
 {
     return _has_value;
 }
 
 template <typename T>
-inline T* fast_any::as() const
+inline T* any::as() const
 {
     if ( _has_value && ( (_value<nullptr_t>*)_value_holder )->type == type_id<T> )
     {
@@ -140,7 +160,7 @@ inline T* fast_any::as() const
 }
 
 template <typename T>
-inline void fast_any::emplace( const T& value )
+inline void any::emplace( const T& value )
 {
     if ( _value_holder && ( (_value<nullptr_t>*)_value_holder )->type == type_id<T> )
     {
@@ -155,7 +175,7 @@ inline void fast_any::emplace( const T& value )
 }
 
 template <typename T>
-inline void fast_any::emplace( T&& value )
+inline void any::emplace( T&& value )
 {
     if ( _value_holder && ( (_value<nullptr_t>*)_value_holder )->type == type_id<T> )
     {
@@ -169,7 +189,7 @@ inline void fast_any::emplace( T&& value )
     _has_value = true;
 }
 
-inline void fast_any::emplace( const fast_any& other )
+inline void any::emplace( const any& other )
 {
     if ( other._has_value )
     {
@@ -187,7 +207,16 @@ inline void fast_any::emplace( const fast_any& other )
     }
 }
 
-inline void fast_any::swap( fast_any& other )
+inline void any::emplace( any&& other )
+{
+    if ( other._has_value )
+    {
+        _value_holder = std::move( other._value_holder );
+        _has_value = std::move( other._has_value );
+    }
+}
+
+inline void any::swap( any& other )
 {
     if ( other._has_value )
     {
@@ -196,12 +225,12 @@ inline void fast_any::swap( fast_any& other )
     }
 }
 
-inline void fast_any::reset()
+inline void any::reset()
 {
     _has_value = false;
 }
 
-inline fast_any_type fast_any::type() const
+inline const type_info& any::type() const
 {
     if ( _value_holder )
     {
