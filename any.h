@@ -205,24 +205,22 @@ inline void any::emplace( const any& other )
 
         _has_value = true;
     }
+    else
+    {
+        _has_value = false;
+    }
 }
 
 inline void any::emplace( any&& other )
 {
-    if ( other._has_value )
-    {
-        _value_holder = std::move( other._value_holder );
-        _has_value = std::move( other._has_value );
-    }
+    _value_holder = std::move( other._value_holder );
+    _has_value = std::move( other._has_value );
 }
 
 inline void any::swap( any& other )
 {
-    if ( other._has_value )
-    {
-        std::swap( other._value_holder, _value_holder );
-        std::swap( other._has_value, _has_value );
-    }
+    std::swap( other._value_holder, _value_holder );
+    std::swap( other._has_value, _has_value );
 }
 
 inline void any::reset()
