@@ -33,9 +33,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace fast_any
 {
 
-inline unsigned int type_id_seq = 0;
+using fast_any_type = unsigned int;
+inline fast_any_type type_id_seq = 0;
 template <typename T>
-inline const unsigned int type_id = type_id_seq++;
+inline const fast_any_type type_id = type_id_seq++;
 
 class fast_any final
 {
@@ -50,19 +51,21 @@ public:
     inline bool has_value() const;
 
     template <typename T>
-    inline T* get() const;
+    inline T* as() const;
 
     template <typename T>
-    inline void emplace( const T& newValue );
-    inline void emplace( const fast_any& fromSignal );
+    inline void emplace( const T& value );
 
     template <typename T>
-    inline void move( T&& newValue );
-    inline void move( fast_any& fromSignal );
+    inline void emplace( T&& value );
+
+    inline void emplace( const fast_any& other );
+
+    inline void swap( fast_any& other );
 
     inline void reset();
 
-    inline unsigned int type() const;
+    inline fast_any_type type() const;
 
 private:
     struct _value_holder
@@ -73,8 +76,8 @@ private:
         inline _value_holder() = default;
         virtual inline ~_value_holder() = default;
 
-        virtual inline _value_holder* get_copy() const = 0;
-        virtual inline void emplace( _value_holder* valueHolder ) = 0;
+        virtual inline _value_holder* clone() const = 0;
+        virtual inline void emplace( _value_holder* value_holder ) = 0;
     };
 
     template <typename T>
@@ -89,17 +92,17 @@ private:
         {
         }
 
-        virtual inline _value_holder* get_copy() const override
+        virtual inline _value_holder* clone() const override
         {
             return new _value( value );
         }
 
-        virtual inline void emplace( _value_holder* valueHolder ) override
+        virtual inline void emplace( _value_holder* value_holder ) override
         {
-            value = ( (_value<T>*)valueHolder )->value;
+            value = ( (_value<T>*)value_holder )->value;
         }
 
-        const unsigned int type;
+        const fast_any_type type;
         T value;
     };
 
@@ -124,7 +127,7 @@ inline bool fast_any::has_value() const
 }
 
 template <typename T>
-inline T* fast_any::get() const
+inline T* fast_any::as() const
 {
     if ( _has_value && ( (_value<nullptr_t>*)_value_holder )->type == type_id<T> )
     {
@@ -137,59 +140,59 @@ inline T* fast_any::get() const
 }
 
 template <typename T>
-inline void fast_any::emplace( const T& newValue )
+inline void fast_any::emplace( const T& value )
 {
     if ( _value_holder && ( (_value<nullptr_t>*)_value_holder )->type == type_id<T> )
     {
-        ( (_value<T>*)_value_holder )->value = newValue;
+        ( (_value<T>*)_value_holder )->value = value;
     }
     else
     {
         delete _value_holder;
-        _value_holder = new _value<T>( newValue );
+        _value_holder = new _value<T>( value );
     }
     _has_value = true;
 }
 
-inline void fast_any::emplace( const fast_any& fromSignal )
+template <typename T>
+inline void fast_any::emplace( T&& value )
 {
-    if ( fromSignal._has_value )
+    if ( _value_holder && ( (_value<nullptr_t>*)_value_holder )->type == type_id<T> )
     {
-        if ( _value_holder && ( (_value<nullptr_t>*)_value_holder )->type == ( (_value<nullptr_t>*)fromSignal._value_holder )->type )
+        ( (_value<T>*)_value_holder )->value = std::move( value );
+    }
+    else
+    {
+        delete _value_holder;
+        _value_holder = new _value<T>( std::move( value ) );
+    }
+    _has_value = true;
+}
+
+inline void fast_any::emplace( const fast_any& other )
+{
+    if ( other._has_value )
+    {
+        if ( _value_holder && ( (_value<nullptr_t>*)_value_holder )->type == ( (_value<nullptr_t>*)other._value_holder )->type )
         {
-            _value_holder->emplace( fromSignal._value_holder );
+            _value_holder->emplace( other._value_holder );
         }
         else
         {
             delete _value_holder;
-            _value_holder = fromSignal._value_holder->get_copy();
+            _value_holder = other._value_holder->clone();
         }
 
         _has_value = true;
     }
 }
 
-template <typename T>
-inline void fast_any::move( T&& newValue )
+inline void fast_any::swap( fast_any& other )
 {
-    if ( _value_holder && ( (_value<nullptr_t>*)_value_holder )->type == type_id<T> )
+    if ( other._has_value )
     {
-        ( (_value<T>*)_value_holder )->value = std::move( newValue );
-    }
-    else
-    {
-        delete _value_holder;
-        _value_holder = new _value<T>( std::move( newValue ) );
-    }
-    _has_value = true;
-}
-
-inline void fast_any::move( fast_any& fromSignal )
-{
-    if ( fromSignal._has_value )
-    {
-        std::swap( fromSignal._value_holder, _value_holder );
-        std::swap( fromSignal._has_value, _has_value );
+        std::swap( other._value_holder, _value_holder );
+        std::swap( other._has_value, _has_value );
     }
 }
 
@@ -198,7 +201,7 @@ inline void fast_any::reset()
     _has_value = false;
 }
 
-inline unsigned int fast_any::type() const
+inline fast_any_type fast_any::type() const
 {
     if ( _value_holder )
     {
