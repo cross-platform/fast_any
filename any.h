@@ -70,45 +70,45 @@ public:
     inline const type_info& type() const;
 
 private:
-    struct _value_holder
+    struct value_holder_t
     {
-        _value_holder( const _value_holder& ) = delete;
-        _value_holder& operator=( const _value_holder& ) = delete;
+        value_holder_t( const value_holder_t& ) = delete;
+        value_holder_t& operator=( const value_holder_t& ) = delete;
 
-        inline _value_holder() = default;
-        virtual inline ~_value_holder() = default;
+        inline value_holder_t() = default;
+        virtual inline ~value_holder_t() = default;
 
-        virtual inline _value_holder* clone() const = 0;
-        virtual inline void emplace( _value_holder* value_holder ) = 0;
+        virtual inline value_holder_t* clone() const = 0;
+        virtual inline void emplace( value_holder_t* value_holder ) = 0;
     };
 
     template <typename T>
-    struct _value final : _value_holder
+    struct value_t final : value_holder_t
     {
-        _value( const _value& ) = delete;
-        _value& operator=( const _value& ) = delete;
+        value_t( const value_t& ) = delete;
+        value_t& operator=( const value_t& ) = delete;
 
-        explicit inline _value( const T& value )
+        explicit inline value_t( const T& value )
             : type( type_id<T> )
             , value( value )
         {
         }
 
-        virtual inline _value_holder* clone() const override
+        virtual inline value_holder_t* clone() const override
         {
-            return new _value( value );
+            return new value_t( value );
         }
 
-        virtual inline void emplace( _value_holder* value_holder ) override
+        virtual inline void emplace( value_holder_t* value_holder ) override
         {
-            value = ( (_value<T>*)value_holder )->value;
+            value = ( (value_t<T>*)value_holder )->value;
         }
 
         const type_info type;
         T value;
     };
 
-    _value_holder* _value_holder = nullptr;
+    value_holder_t* _value_holder = nullptr;
     bool _has_value = false;
 };
 
@@ -149,9 +149,9 @@ inline bool any::has_value() const
 template <typename T>
 inline T* any::as() const
 {
-    if ( _has_value && ( (_value<nullptr_t>*)_value_holder )->type == type_id<T> )
+    if ( _has_value && ( (value_t<nullptr_t>*)_value_holder )->type == type_id<T> )
     {
-        return &( (_value<T>*)_value_holder )->value;
+        return &( (value_t<T>*)_value_holder )->value;
     }
     else
     {
@@ -162,14 +162,14 @@ inline T* any::as() const
 template <typename T>
 inline void any::emplace( const T& value )
 {
-    if ( _value_holder && ( (_value<nullptr_t>*)_value_holder )->type == type_id<T> )
+    if ( _value_holder && ( (value_t<nullptr_t>*)_value_holder )->type == type_id<T> )
     {
-        ( (_value<T>*)_value_holder )->value = value;
+        ( (value_t<T>*)_value_holder )->value = value;
     }
     else
     {
         delete _value_holder;
-        _value_holder = new _value<T>( value );
+        _value_holder = new value_t<T>( value );
     }
     _has_value = true;
 }
@@ -177,14 +177,14 @@ inline void any::emplace( const T& value )
 template <typename T>
 inline void any::emplace( T&& value )
 {
-    if ( _value_holder && ( (_value<nullptr_t>*)_value_holder )->type == type_id<T> )
+    if ( _value_holder && ( (value_t<nullptr_t>*)_value_holder )->type == type_id<T> )
     {
-        ( (_value<T>*)_value_holder )->value = std::move( value );
+        ( (value_t<T>*)_value_holder )->value = std::move( value );
     }
     else
     {
         delete _value_holder;
-        _value_holder = new _value<T>( std::move( value ) );
+        _value_holder = new value_t<T>( std::move( value ) );
     }
     _has_value = true;
 }
@@ -193,7 +193,7 @@ inline void any::emplace( const any& other )
 {
     if ( other._has_value )
     {
-        if ( _value_holder && ( (_value<nullptr_t>*)_value_holder )->type == ( (_value<nullptr_t>*)other._value_holder )->type )
+        if ( _value_holder && ( (value_t<nullptr_t>*)_value_holder )->type == ( (value_t<nullptr_t>*)other._value_holder )->type )
         {
             _value_holder->emplace( other._value_holder );
         }
@@ -234,7 +234,7 @@ inline const type_info& any::type() const
 {
     if ( _value_holder )
     {
-        return ( (_value<nullptr_t>*)_value_holder )->type;
+        return ( (value_t<nullptr_t>*)_value_holder )->type;
     }
     else
     {
