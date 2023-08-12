@@ -101,7 +101,7 @@ private:
 
         virtual inline void emplace( value_holder_t* value_holder ) override
         {
-            value = ( (value_t<T>*)value_holder )->value;
+            value = static_cast<value_t<T>*>( value_holder )->value;
         }
 
         const type_info type;
@@ -154,9 +154,9 @@ inline bool any::has_value() const
 template <typename T>
 inline T* any::as() const
 {
-    if ( _has_value && ( (value_t<nullptr_t>*)_value_holder )->type == type_id<T> )
+    if ( _has_value && static_cast<value_t<nullptr_t>*>( _value_holder )->type == type_id<T> )
     {
-        return &( (value_t<T>*)_value_holder )->value;
+        return &static_cast<value_t<T>*>( _value_holder )->value;
     }
     else
     {
@@ -167,9 +167,9 @@ inline T* any::as() const
 template <typename T>
 inline void any::emplace( const T& value )
 {
-    if ( _value_holder && ( (value_t<nullptr_t>*)_value_holder )->type == type_id<T> )
+    if ( _value_holder && static_cast<value_t<nullptr_t>*>( _value_holder )->type == type_id<T> )
     {
-        ( (value_t<T>*)_value_holder )->value = value;
+        static_cast<value_t<T>*>( _value_holder )->value = value;
     }
     else
     {
@@ -183,9 +183,9 @@ inline void any::emplace( const T& value )
 template <typename T>
 inline void any::emplace( T&& value )
 {
-    if ( _value_holder && ( (value_t<nullptr_t>*)_value_holder )->type == type_id<T> )
+    if ( _value_holder && static_cast<value_t<nullptr_t>*>( _value_holder )->type == type_id<T> )
     {
-        ( (value_t<T>*)_value_holder )->value = std::move( value );
+        static_cast<value_t<T>*>( _value_holder )->value = std::move( value );
     }
     else
     {
@@ -202,7 +202,8 @@ inline void any::emplace( const any& other )
 
     if ( _has_value )
     {
-        if ( _value_holder && ( (value_t<nullptr_t>*)_value_holder )->type == ( (value_t<nullptr_t>*)other._value_holder )->type )
+        if ( _value_holder &&
+             static_cast<value_t<nullptr_t>*>( _value_holder )->type == static_cast<value_t<nullptr_t>*>( other._value_holder )->type )
         {
             _value_holder->emplace( other._value_holder );
         }
@@ -235,7 +236,7 @@ inline const type_info& any::type() const
 {
     if ( _value_holder )
     {
-        return ( (value_t<nullptr_t>*)_value_holder )->type;
+        return static_cast<value_t<nullptr_t>*>( _value_holder )->type;
     }
     else
     {
