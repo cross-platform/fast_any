@@ -121,7 +121,12 @@ inline any::~any()
 
 inline any::any( const any& other )
 {
-    emplace( other );
+    _has_value = other._has_value;
+
+    if ( _has_value )
+    {
+        _value_holder = other._value_holder->clone();
+    }
 }
 
 inline any::any( any&& other )
@@ -171,6 +176,7 @@ inline void any::emplace( const T& value )
         delete _value_holder;
         _value_holder = new value_t<T>( value );
     }
+
     _has_value = true;
 }
 
@@ -186,12 +192,15 @@ inline void any::emplace( T&& value )
         delete _value_holder;
         _value_holder = new value_t<T>( std::move( value ) );
     }
+
     _has_value = true;
 }
 
 inline void any::emplace( const any& other )
 {
-    if ( other._has_value )
+    _has_value = other._has_value;
+
+    if ( _has_value )
     {
         if ( _value_holder && ( (value_t<nullptr_t>*)_value_holder )->type == ( (value_t<nullptr_t>*)other._value_holder )->type )
         {
@@ -202,12 +211,6 @@ inline void any::emplace( const any& other )
             delete _value_holder;
             _value_holder = other._value_holder->clone();
         }
-
-        _has_value = true;
-    }
-    else
-    {
-        _has_value = false;
     }
 }
 
