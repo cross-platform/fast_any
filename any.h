@@ -49,6 +49,12 @@ public:
     inline any& operator=( const any& other );
     inline any& operator=( any&& other );
 
+    template <typename T>
+    inline any& operator=( const T& value );
+
+    template <typename T>
+    inline any& operator=( T&& value );
+
     inline bool has_value() const;
 
     template <typename T>
@@ -72,34 +78,37 @@ public:
 private:
     struct value_holder_t
     {
-        value_holder_t( const value_holder_t& ) = delete;
-        value_holder_t& operator=( const value_holder_t& ) = delete;
-
         inline value_holder_t() = default;
-        virtual inline ~value_holder_t() = default;
+        inline virtual ~value_holder_t() = default;
 
-        virtual inline value_holder_t* clone() const = 0;
-        virtual inline void emplace( value_holder_t* value_holder ) = 0;
+        inline value_holder_t( const value_holder_t& ) = delete;
+        inline value_holder_t& operator=( const value_holder_t& ) = delete;
+
+        inline virtual value_holder_t* clone() const = 0;
+        inline virtual void emplace( value_holder_t* value_holder ) = 0;
     };
 
     template <typename T>
     struct value_t final : value_holder_t
     {
-        value_t( const value_t& ) = delete;
-        value_t& operator=( const value_t& ) = delete;
+        inline value_t() = delete;
+        inline ~value_t() = default;
 
-        explicit inline value_t( const T& value )
+        inline value_t( const value_t& ) = delete;
+        inline value_t& operator=( const value_t& ) = delete;
+
+        inline explicit value_t( const T& value )
             : type( type_id<T> )
             , value( value )
         {
         }
 
-        virtual inline value_holder_t* clone() const override
+        inline value_holder_t* clone() const override
         {
             return new value_t( value );
         }
 
-        virtual inline void emplace( value_holder_t* value_holder ) override
+        inline void emplace( value_holder_t* value_holder ) override
         {
             value = static_cast<value_t<T>*>( value_holder )->value;
         }
@@ -120,9 +129,8 @@ inline any::~any()
 }
 
 inline any::any( const any& other )
+    : _has_value( other._has_value )
 {
-    _has_value = other._has_value;
-
     if ( _has_value )
     {
         _value_holder = other._value_holder->clone();
@@ -130,8 +138,12 @@ inline any::any( const any& other )
 }
 
 inline any::any( any&& other )
+    : _has_value( std::move( other._has_value ) )
 {
-    emplace( std::move( other ) );
+    if ( _has_value )
+    {
+        _value_holder = std::move( other._value_holder );
+    }
 }
 
 inline any& any::operator=( const any& other )
@@ -143,6 +155,20 @@ inline any& any::operator=( const any& other )
 inline any& any::operator=( any&& other )
 {
     emplace( std::move( other ) );
+    return *this;
+}
+
+template <typename T>
+inline any& any::operator=( const T& value )
+{
+    emplace( value );
+    return *this;
+}
+
+template <typename T>
+inline any& any::operator=( T&& value )
+{
+    emplace( std::move( value ) );
     return *this;
 }
 
@@ -217,8 +243,12 @@ inline void any::emplace( const any& other )
 
 inline void any::emplace( any&& other )
 {
-    _value_holder = std::move( other._value_holder );
     _has_value = std::move( other._has_value );
+
+    if ( _has_value )
+    {
+        _value_holder = std::move( other._value_holder );
+    }
 }
 
 inline void any::swap( any& other )
