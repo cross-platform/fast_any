@@ -109,6 +109,12 @@ private:
         {
         }
 
+        inline explicit value_t( T&& value )
+            : type( type_id<T> )
+            , value( std::forward<T>( value ) )
+        {
+        }
+
         inline value_holder_t* clone() const override
         {
             return new value_t( value );
@@ -135,12 +141,8 @@ inline any::~any()
 }
 
 inline any::any( const any& other )
-    : _has_value( other._has_value )
+    : any( const_cast<any&>( other ) )
 {
-    if ( _has_value )
-    {
-        _value_holder = other._value_holder->clone();
-    }
 }
 
 inline any::any( any& other )
@@ -215,21 +217,7 @@ inline T* any::as() const
 
 inline void any::emplace( const any& other )
 {
-    _has_value = other._has_value;
-
-    if ( _has_value )
-    {
-        if ( _value_holder &&
-             static_cast<value_t<nullptr_t>*>( _value_holder )->type == static_cast<value_t<nullptr_t>*>( other._value_holder )->type )
-        {
-            _value_holder->emplace( other._value_holder );
-        }
-        else
-        {
-            delete _value_holder;
-            _value_holder = other._value_holder->clone();
-        }
-    }
+    emplace( const_cast<any&>( other ) );
 }
 
 inline void any::emplace( any& other )
