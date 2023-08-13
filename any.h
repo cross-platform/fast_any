@@ -46,6 +46,10 @@ public:
 
     inline any( const any& other );
     inline any( any&& other );
+
+    template <typename T>
+    inline any( T&& value );
+
     inline any& operator=( const any& other );
     inline any& operator=( any&& other );
 
@@ -60,14 +64,14 @@ public:
     template <typename T>
     inline T* as() const;
 
+    inline void emplace( const any& other );
+    inline void emplace( any&& other );
+
     template <typename T>
     inline void emplace( const T& value );
 
     template <typename T>
     inline void emplace( T&& value );
-
-    inline void emplace( const any& other );
-    inline void emplace( any&& other );
 
     inline void swap( any& other );
 
@@ -146,6 +150,13 @@ inline any::any( any&& other )
     }
 }
 
+template <typename T>
+inline any::any( T&& value )
+    : _value_holder( new value_t<T>( std::forward<T>( value ) ) )
+    , _has_value( true )
+{
+}
+
 inline any& any::operator=( const any& other )
 {
     emplace( other );
@@ -190,6 +201,35 @@ inline T* any::as() const
     }
 }
 
+inline void any::emplace( const any& other )
+{
+    _has_value = other._has_value;
+
+    if ( _has_value )
+    {
+        if ( _value_holder &&
+             static_cast<value_t<nullptr_t>*>( _value_holder )->type == static_cast<value_t<nullptr_t>*>( other._value_holder )->type )
+        {
+            _value_holder->emplace( other._value_holder );
+        }
+        else
+        {
+            delete _value_holder;
+            _value_holder = other._value_holder->clone();
+        }
+    }
+}
+
+inline void any::emplace( any&& other )
+{
+    _has_value = std::move( other._has_value );
+
+    if ( _has_value )
+    {
+        _value_holder = std::move( other._value_holder );
+    }
+}
+
 template <typename T>
 inline void any::emplace( const T& value )
 {
@@ -220,35 +260,6 @@ inline void any::emplace( T&& value )
     }
 
     _has_value = true;
-}
-
-inline void any::emplace( const any& other )
-{
-    _has_value = other._has_value;
-
-    if ( _has_value )
-    {
-        if ( _value_holder &&
-             static_cast<value_t<nullptr_t>*>( _value_holder )->type == static_cast<value_t<nullptr_t>*>( other._value_holder )->type )
-        {
-            _value_holder->emplace( other._value_holder );
-        }
-        else
-        {
-            delete _value_holder;
-            _value_holder = other._value_holder->clone();
-        }
-    }
-}
-
-inline void any::emplace( any&& other )
-{
-    _has_value = std::move( other._has_value );
-
-    if ( _has_value )
-    {
-        _value_holder = std::move( other._value_holder );
-    }
 }
 
 inline void any::swap( any& other )
