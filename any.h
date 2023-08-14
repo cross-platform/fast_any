@@ -253,6 +253,7 @@ inline void any::emplace( any&& other )
 
     if ( _has_value )
     {
+        delete _value_holder;
         _value_holder = std::move( other._value_holder );
         other._value_holder = nullptr;
     }
