@@ -91,7 +91,7 @@ private:
         inline value_holder_t& operator=( const value_holder_t& ) = delete;
 
         inline virtual value_holder_t* clone() const = 0;
-        inline virtual void emplace( value_holder_t* value_holder ) = 0;
+        inline virtual void reverse_emplace( value_holder_t*& value_holder ) = 0;
     };
 
     template <typename T>
@@ -120,9 +120,17 @@ private:
             return new value_t( value );
         }
 
-        inline void emplace( value_holder_t* value_holder ) override
+        inline void reverse_emplace( value_holder_t*& value_holder ) override
         {
-            value = static_cast<value_t<T>*>( value_holder )->value;
+            if ( value_holder && static_cast<value_t<nullptr_t>*>( value_holder )->type == type )
+            {
+                static_cast<value_t<T>*>( value_holder )->value = value;
+            }
+            else
+            {
+                delete value_holder;
+                value_holder = new value_t( value );
+            }
         }
 
         const type_info type;
@@ -141,8 +149,12 @@ inline any::~any()
 }
 
 inline any::any( const any& other )
-    : any( const_cast<any&>( other ) )
+    : _has_value( other._has_value )
 {
+    if ( _has_value )
+    {
+        _value_holder = other._value_holder->clone();
+    }
 }
 
 inline any::any( any& other )
@@ -217,7 +229,12 @@ inline T* any::as() const
 
 inline void any::emplace( const any& other )
 {
-    emplace( const_cast<any&>( other ) );
+    _has_value = other._has_value;
+
+    if ( _has_value )
+    {
+        other._value_holder->reverse_emplace( _value_holder );
+    }
 }
 
 inline void any::emplace( any& other )
@@ -226,16 +243,7 @@ inline void any::emplace( any& other )
 
     if ( _has_value )
     {
-        if ( _value_holder &&
-             static_cast<value_t<nullptr_t>*>( _value_holder )->type == static_cast<value_t<nullptr_t>*>( other._value_holder )->type )
-        {
-            _value_holder->emplace( other._value_holder );
-        }
-        else
-        {
-            delete _value_holder;
-            _value_holder = other._value_holder->clone();
-        }
+        other._value_holder->reverse_emplace( _value_holder );
     }
 }
 
