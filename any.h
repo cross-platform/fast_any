@@ -104,14 +104,12 @@ private:
         inline value_t& operator=( const value_t& ) = delete;
 
         inline explicit value_t( const T& value )
-            : type( type_id<T> )
-            , value( value )
+            : value( value )
         {
         }
 
         inline explicit value_t( T&& value )
-            : type( type_id<T> )
-            , value( std::forward<T>( value ) )
+            : value( std::forward<T>( value ) )
         {
         }
 
@@ -133,7 +131,7 @@ private:
             }
         }
 
-        const type_info type;
+        const type_info type = type_id<T>;
         T value;
     };
 
