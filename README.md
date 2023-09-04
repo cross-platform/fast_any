@@ -23,5 +23,5 @@ From my benchmarks in <a href=https://github.com/cross-platform/dspatch>DSPatch<
 4x Buffer, 10000 Components: 0.109003ms
 ```
 
-- Test code: https://github.com/cross-platform/dspatch/blob/master/tests/main.cpp#L1230
+- Test code: https://github.com/cross-platform/dspatch/blob/master/tests/main.cpp#L724
 - Test branch using `std::any`: https://github.com/cross-platform/dspatch/pull/53
