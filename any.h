@@ -79,7 +79,7 @@ public:
 
     inline void reset();
 
-    inline const type_info& type() const;
+    inline type_info type() const;
 
 private:
     struct value_holder_t
@@ -170,7 +170,6 @@ inline any::any( any&& other )
     if ( _has_value )
     {
         _value_holder = std::move( other._value_holder );
-        other._value_holder = nullptr;
     }
 }
 
@@ -253,7 +252,6 @@ inline void any::emplace( any&& other )
     {
         delete _value_holder;
         _value_holder = std::move( other._value_holder );
-        other._value_holder = nullptr;
     }
 }
 
@@ -300,7 +298,7 @@ inline void any::reset()
     _has_value = false;
 }
 
-inline const type_info& any::type() const
+inline type_info any::type() const
 {
     if ( _value_holder )
     {
