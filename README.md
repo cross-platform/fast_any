@@ -7,20 +7,20 @@ From my benchmarks in <a href=https://github.com/cross-platform/dspatch>DSPatch<
 
 `std::any`:
 ```
-0x Buffer, 10000 Components: 0.385436ms
-1x Buffer, 10000 Components: 0.394041ms
-2x Buffer, 10000 Components: 0.23258ms
-3x Buffer, 10000 Components: 0.185374ms
-4x Buffer, 10000 Components: 0.146045ms
+0x Buffer, 10000 Components: 0.192569ms
+1x Buffer, 10000 Components: 0.200076ms
+2x Buffer, 10000 Components: 0.109053ms
+3x Buffer, 10000 Components: 0.078341ms
+4x Buffer, 10000 Components: 0.061341ms
 ```
 
 `fast_any`:
 ```
-0x Buffer, 10000 Components: 0.278271ms
-1x Buffer, 10000 Components: 0.290789ms
-2x Buffer, 10000 Components: 0.16599ms
-3x Buffer, 10000 Components: 0.138325ms
-4x Buffer, 10000 Components: 0.109003ms
+0x Buffer, 10000 Components: 0.121448ms
+1x Buffer, 10000 Components: 0.131581ms
+2x Buffer, 10000 Components: 0.077578ms
+3x Buffer, 10000 Components: 0.058087ms
+4x Buffer, 10000 Components: 0.045322ms
 ```
 
 - Test code: https://github.com/cross-platform/dspatch/blob/master/tests/main.cpp
