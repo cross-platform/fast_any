@@ -1,6 +1,6 @@
 /******************************************************************************
 fast_any - A faster alternative to boost:any / std::any
-Copyright (c) 2023, Marcus Tomlinson
+Copyright (c) 2024, Marcus Tomlinson
 
 BSD 2-Clause License
 
