@@ -120,7 +120,7 @@ private:
 
         inline void reverse_emplace( value_holder_t*& value_holder ) override
         {
-            if ( value_holder && static_cast<value_t<nullptr_t>*>( value_holder )->type == type )
+            if ( value_holder && static_cast<value_t<std::nullptr_t>*>( value_holder )->type == type )
             {
                 static_cast<value_t<T>*>( value_holder )->value = value;
             }
@@ -214,7 +214,7 @@ inline bool any::has_value() const
 template <typename T>
 inline T* any::as() const
 {
-    if ( _has_value && static_cast<value_t<nullptr_t>*>( _value_holder )->type == type_id<T> )
+    if ( _has_value && static_cast<value_t<std::nullptr_t>*>( _value_holder )->type == type_id<T> )
     {
         return &static_cast<value_t<T>*>( _value_holder )->value;
     }
@@ -258,7 +258,7 @@ inline void any::emplace( any&& other )
 template <typename T>
 inline void any::emplace( const T& value )
 {
-    if ( _value_holder && static_cast<value_t<nullptr_t>*>( _value_holder )->type == type_id<T> )
+    if ( _value_holder && static_cast<value_t<std::nullptr_t>*>( _value_holder )->type == type_id<T> )
     {
         static_cast<value_t<T>*>( _value_holder )->value = value;
     }
@@ -274,7 +274,7 @@ inline void any::emplace( const T& value )
 template <typename T>
 inline void any::emplace( T&& value )
 {
-    if ( _value_holder && static_cast<value_t<nullptr_t>*>( _value_holder )->type == type_id<T> )
+    if ( _value_holder && static_cast<value_t<std::nullptr_t>*>( _value_holder )->type == type_id<T> )
     {
         static_cast<value_t<T>*>( _value_holder )->value = std::forward<T>( value );
     }
@@ -302,7 +302,7 @@ inline type_info any::type() const
 {
     if ( _value_holder )
     {
-        return static_cast<value_t<nullptr_t>*>( _value_holder )->type;
+        return static_cast<value_t<std::nullptr_t>*>( _value_holder )->type;
     }
     else
     {
