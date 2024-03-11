@@ -84,11 +84,11 @@ public:
 private:
     struct value_holder_t
     {
+        value_holder_t( const value_holder_t& ) = delete;
+        value_holder_t& operator=( const value_holder_t& ) = delete;
+
         inline value_holder_t() = default;
         inline virtual ~value_holder_t() = default;
-
-        inline value_holder_t( const value_holder_t& ) = delete;
-        inline value_holder_t& operator=( const value_holder_t& ) = delete;
 
         inline virtual value_holder_t* clone() const = 0;
         inline virtual void reverse_emplace( value_holder_t*& value_holder ) = 0;
@@ -97,11 +97,11 @@ private:
     template <typename T>
     struct value_t final : value_holder_t
     {
-        inline value_t() = delete;
-        inline ~value_t() = default;
+        value_t() = delete;
+        value_t( const value_t& ) = delete;
+        value_t& operator=( const value_t& ) = delete;
 
-        inline value_t( const value_t& ) = delete;
-        inline value_t& operator=( const value_t& ) = delete;
+        inline ~value_t() = default;
 
         inline explicit value_t( const T& value )
             : value( value )
