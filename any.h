@@ -41,45 +41,45 @@ inline const type_info type_id = type_info_seq++;
 class any final
 {
 public:
-    inline any();
-    inline ~any();
+    any();
+    ~any();
 
-    inline any( const any& other );
-    inline any( any& other );
-    inline any( any&& other );
-
-    template <typename T>
-    inline any( T&& value );
-
-    inline any& operator=( const any& other );
-    inline any& operator=( any&& other );
+    any( const any& other );
+    any( any& other );
+    any( any&& other );
 
     template <typename T>
-    inline any& operator=( const T& value );
+    any( T&& value );
+
+    any& operator=( const any& other );
+    any& operator=( any&& other );
 
     template <typename T>
-    inline any& operator=( T&& value );
-
-    inline bool has_value() const;
+    any& operator=( const T& value );
 
     template <typename T>
-    inline T* as() const;
+    any& operator=( T&& value );
 
-    inline void emplace( const any& other );
-    inline void emplace( any& other );
-    inline void emplace( any&& other );
+    bool has_value() const;
 
     template <typename T>
-    inline void emplace( const T& value );
+    T* as() const;
+
+    void emplace( const any& other );
+    void emplace( any& other );
+    void emplace( any&& other );
 
     template <typename T>
-    inline void emplace( T&& value );
+    void emplace( const T& value );
 
-    inline void swap( any& other );
+    template <typename T>
+    void emplace( T&& value );
 
-    inline void reset();
+    void swap( any& other );
 
-    inline type_info type() const;
+    void reset();
+
+    type_info type() const;
 
 private:
     struct value_holder_t
@@ -139,14 +139,14 @@ private:
     bool _has_value = false;
 };
 
-any::any() = default;
+inline any::any() = default;
 
-any::~any()
+inline any::~any()
 {
     delete _value_holder;
 }
 
-any::any( const any& other )
+inline any::any( const any& other )
     : _has_value( other._has_value )
 {
     if ( _has_value )
@@ -155,7 +155,7 @@ any::any( const any& other )
     }
 }
 
-any::any( any& other )
+inline any::any( any& other )
     : _has_value( other._has_value )
 {
     if ( _has_value )
@@ -164,7 +164,7 @@ any::any( any& other )
     }
 }
 
-any::any( any&& other )
+inline any::any( any&& other )
     : _has_value( std::move( other._has_value ) )
 {
     if ( _has_value )
@@ -174,45 +174,45 @@ any::any( any&& other )
 }
 
 template <typename T>
-any::any( T&& value )
+inline any::any( T&& value )
     : _value_holder( new value_t<T>( std::forward<T>( value ) ) )
     , _has_value( true )
 {
 }
 
-any& any::operator=( const any& other )
+inline any& any::operator=( const any& other )
 {
     emplace( other );
     return *this;
 }
 
-any& any::operator=( any&& other )
+inline any& any::operator=( any&& other )
 {
     emplace( std::forward<any>( other ) );
     return *this;
 }
 
 template <typename T>
-any& any::operator=( const T& value )
+inline any& any::operator=( const T& value )
 {
     emplace( value );
     return *this;
 }
 
 template <typename T>
-any& any::operator=( T&& value )
+inline any& any::operator=( T&& value )
 {
     emplace( std::forward<T>( value ) );
     return *this;
 }
 
-bool any::has_value() const
+inline bool any::has_value() const
 {
     return _has_value;
 }
 
 template <typename T>
-T* any::as() const
+inline T* any::as() const
 {
     if ( _has_value && static_cast<value_t<std::nullptr_t>*>( _value_holder )->type == type_id<T> )
     {
@@ -224,7 +224,7 @@ T* any::as() const
     }
 }
 
-void any::emplace( const any& other )
+inline void any::emplace( const any& other )
 {
     _has_value = other._has_value;
 
@@ -234,7 +234,7 @@ void any::emplace( const any& other )
     }
 }
 
-void any::emplace( any& other )
+inline void any::emplace( any& other )
 {
     _has_value = other._has_value;
 
@@ -244,7 +244,7 @@ void any::emplace( any& other )
     }
 }
 
-void any::emplace( any&& other )
+inline void any::emplace( any&& other )
 {
     _has_value = std::move( other._has_value );
 
@@ -256,7 +256,7 @@ void any::emplace( any&& other )
 }
 
 template <typename T>
-void any::emplace( const T& value )
+inline void any::emplace( const T& value )
 {
     if ( _value_holder && static_cast<value_t<std::nullptr_t>*>( _value_holder )->type == type_id<T> )
     {
@@ -272,7 +272,7 @@ void any::emplace( const T& value )
 }
 
 template <typename T>
-void any::emplace( T&& value )
+inline void any::emplace( T&& value )
 {
     if ( _value_holder && static_cast<value_t<std::nullptr_t>*>( _value_holder )->type == type_id<T> )
     {
@@ -287,18 +287,18 @@ void any::emplace( T&& value )
     _has_value = true;
 }
 
-void any::swap( any& other )
+inline void any::swap( any& other )
 {
     std::swap( other._value_holder, _value_holder );
     std::swap( other._has_value, _has_value );
 }
 
-void any::reset()
+inline void any::reset()
 {
     _has_value = false;
 }
 
-type_info any::type() const
+inline type_info any::type() const
 {
     if ( _value_holder )
     {
