@@ -91,7 +91,7 @@ private:
         inline virtual ~value_holder_t() = default;
 
         inline virtual value_holder_t* clone() const = 0;
-        inline virtual void reverse_emplace( value_holder_t*& value_holder ) = 0;
+        inline virtual void emplace( const value_holder_t* value_holder ) = 0;
     };
 
     template <typename T>
@@ -118,25 +118,17 @@ private:
             return new value_t( value );
         }
 
-        inline void reverse_emplace( value_holder_t*& value_holder ) override
+        inline void emplace( const value_holder_t* value_holder ) override
         {
-            if ( value_holder && static_cast<value_t<std::nullptr_t>*>( value_holder )->type == type )
-            {
-                static_cast<value_t<T>*>( value_holder )->value = value;
-            }
-            else
-            {
-                delete value_holder;
-                value_holder = new value_t( value );
-            }
+            value = static_cast<const value_t<T>*>( value_holder )->value;
         }
 
-        const type_info type = type_id<T>;
         T value;
     };
 
     value_holder_t* _value_holder = nullptr;
     bool _has_value = false;
+    type_info _type = 0;
 };
 
 inline any::any() = default;
@@ -152,6 +144,7 @@ inline any::any( const any& other )
     if ( _has_value )
     {
         _value_holder = other._value_holder->clone();
+        _type = other._type;
     }
 }
 
@@ -161,6 +154,7 @@ inline any::any( any& other )
     if ( _has_value )
     {
         _value_holder = other._value_holder->clone();
+        _type = other._type;
     }
 }
 
@@ -170,6 +164,7 @@ inline any::any( any&& other )
     if ( _has_value )
     {
         _value_holder = std::move( other._value_holder );
+        _type = std::move( other._type );
     }
 }
 
@@ -177,6 +172,7 @@ template <typename T>
 inline any::any( T&& value )
     : _value_holder( new value_t<T>( std::forward<T>( value ) ) )
     , _has_value( true )
+    , _type( type_id<T> )
 {
 }
 
@@ -214,7 +210,7 @@ inline bool any::has_value() const
 template <typename T>
 inline T* any::as() const
 {
-    if ( _has_value && static_cast<value_t<std::nullptr_t>*>( _value_holder )->type == type_id<T> )
+    if ( _has_value && _type == type_id<T> )
     {
         return &static_cast<value_t<T>*>( _value_holder )->value;
     }
@@ -230,7 +226,16 @@ inline void any::emplace( const any& other )
 
     if ( _has_value )
     {
-        other._value_holder->reverse_emplace( _value_holder );
+        if ( _type == other._type )
+        {
+            _value_holder->emplace( other._value_holder );
+        }
+        else
+        {
+            delete _value_holder;
+            _value_holder = other._value_holder->clone();
+            _type = other._type;
+        }
     }
 }
 
@@ -240,7 +245,16 @@ inline void any::emplace( any& other )
 
     if ( _has_value )
     {
-        other._value_holder->reverse_emplace( _value_holder );
+        if ( _type == other._type )
+        {
+            _value_holder->emplace( other._value_holder );
+        }
+        else
+        {
+            delete _value_holder;
+            _value_holder = other._value_holder->clone();
+            _type = other._type;
+        }
     }
 }
 
@@ -252,13 +266,16 @@ inline void any::emplace( any&& other )
     {
         delete _value_holder;
         _value_holder = std::move( other._value_holder );
+        _type = std::move( other._type );
     }
 }
 
 template <typename T>
 inline void any::emplace( const T& value )
 {
-    if ( _value_holder && static_cast<value_t<std::nullptr_t>*>( _value_holder )->type == type_id<T> )
+    _has_value = true;
+
+    if ( _value_holder && _type == type_id<T> )
     {
         static_cast<value_t<T>*>( _value_holder )->value = value;
     }
@@ -266,15 +283,16 @@ inline void any::emplace( const T& value )
     {
         delete _value_holder;
         _value_holder = new value_t<T>( value );
+        _type = type_id<T>;
     }
-
-    _has_value = true;
 }
 
 template <typename T>
 inline void any::emplace( T&& value )
 {
-    if ( _value_holder && static_cast<value_t<std::nullptr_t>*>( _value_holder )->type == type_id<T> )
+    _has_value = true;
+
+    if ( _value_holder && _type == type_id<T> )
     {
         static_cast<value_t<T>*>( _value_holder )->value = std::forward<T>( value );
     }
@@ -282,15 +300,15 @@ inline void any::emplace( T&& value )
     {
         delete _value_holder;
         _value_holder = new value_t<T>( std::forward<T>( value ) );
+        _type = type_id<T>;
     }
-
-    _has_value = true;
 }
 
 inline void any::swap( any& other )
 {
     std::swap( other._value_holder, _value_holder );
     std::swap( other._has_value, _has_value );
+    std::swap( other._type, _type );
 }
 
 inline void any::reset()
@@ -300,9 +318,9 @@ inline void any::reset()
 
 inline type_info any::type() const
 {
-    if ( _value_holder )
+    if ( _has_value )
     {
-        return static_cast<value_t<std::nullptr_t>*>( _value_holder )->type;
+        return _type;
     }
     else
     {
