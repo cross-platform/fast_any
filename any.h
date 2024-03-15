@@ -226,7 +226,7 @@ inline void any::emplace( const any& other )
 
     if ( _has_value )
     {
-        if ( _type == other._type )
+        if ( _value_holder && _type == other._type )
         {
             _value_holder->emplace( other._value_holder );
         }
@@ -245,7 +245,7 @@ inline void any::emplace( any& other )
 
     if ( _has_value )
     {
-        if ( _type == other._type )
+        if ( _value_holder && _type == other._type )
         {
             _value_holder->emplace( other._value_holder );
         }
