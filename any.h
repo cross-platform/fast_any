@@ -127,7 +127,8 @@ private:
     };
 
     value_holder_t* _value_holder = nullptr;
-    type_info _type = type_id<void>;
+    bool _has_value = false;
+    type_info _type = 0;
 };
 
 inline any::any() = default;
@@ -138,35 +139,39 @@ inline any::~any()
 }
 
 inline any::any( const any& other )
-    : _type( other._type )
+    : _has_value( other._has_value )
 {
-    if ( _type != type_id<void> )
+    if ( _has_value )
     {
         _value_holder = other._value_holder->clone();
+        _type = other._type;
     }
 }
 
 inline any::any( any& other )
-    : _type( other._type )
+    : _has_value( other._has_value )
 {
-    if ( _type != type_id<void> )
+    if ( _has_value )
     {
         _value_holder = other._value_holder->clone();
+        _type = other._type;
     }
 }
 
 inline any::any( any&& other )
-    : _type( std::move( other._type ) )
+    : _has_value( std::move( other._has_value ) )
 {
-    if ( _type != type_id<void> )
+    if ( _has_value )
     {
         _value_holder = std::move( other._value_holder );
+        _type = std::move( other._type );
     }
 }
 
 template <typename T>
 inline any::any( T&& value )
     : _value_holder( new value_t<T>( std::forward<T>( value ) ) )
+    , _has_value( true )
     , _type( type_id<T> )
 {
 }
@@ -199,13 +204,13 @@ inline any& any::operator=( T&& value )
 
 inline bool any::has_value() const
 {
-    return _type != type_id<void>;
+    return _has_value;
 }
 
 template <typename T>
 inline T* any::as() const
 {
-    if ( _type == type_id<T> )
+    if ( _has_value && _type == type_id<T> )
     {
         return &static_cast<value_t<T>*>( _value_holder )->value;
     }
@@ -217,7 +222,9 @@ inline T* any::as() const
 
 inline void any::emplace( const any& other )
 {
-    if ( other._type != type_id<void> )
+    _has_value = other._has_value;
+
+    if ( _has_value )
     {
         if ( _value_holder && _type == other._type )
         {
@@ -227,15 +234,16 @@ inline void any::emplace( const any& other )
         {
             delete _value_holder;
             _value_holder = other._value_holder->clone();
+            _type = other._type;
         }
     }
-
-    _type = other._type;
 }
 
 inline void any::emplace( any& other )
 {
-    if ( other._type != type_id<void> )
+    _has_value = other._has_value;
+
+    if ( _has_value )
     {
         if ( _value_holder && _type == other._type )
         {
@@ -245,26 +253,28 @@ inline void any::emplace( any& other )
         {
             delete _value_holder;
             _value_holder = other._value_holder->clone();
+            _type = other._type;
         }
     }
-
-    _type = other._type;
 }
 
 inline void any::emplace( any&& other )
 {
-    _type = std::move( other._type );
+    _has_value = std::move( other._has_value );
 
-    if ( _type != type_id<void> )
+    if ( _has_value )
     {
         delete _value_holder;
         _value_holder = std::move( other._value_holder );
+        _type = std::move( other._type );
     }
 }
 
 template <typename T>
 inline void any::emplace( const T& value )
 {
+    _has_value = true;
+
     if ( _value_holder && _type == type_id<T> )
     {
         static_cast<value_t<T>*>( _value_holder )->value = value;
@@ -273,14 +283,15 @@ inline void any::emplace( const T& value )
     {
         delete _value_holder;
         _value_holder = new value_t<T>( value );
+        _type = type_id<T>;
     }
-
-    _type = type_id<T>;
 }
 
 template <typename T>
 inline void any::emplace( T&& value )
 {
+    _has_value = true;
+
     if ( _value_holder && _type == type_id<T> )
     {
         static_cast<value_t<T>*>( _value_holder )->value = std::forward<T>( value );
@@ -289,25 +300,32 @@ inline void any::emplace( T&& value )
     {
         delete _value_holder;
         _value_holder = new value_t<T>( std::forward<T>( value ) );
+        _type = type_id<T>;
     }
-
-    _type = type_id<T>;
 }
 
 inline void any::swap( any& other )
 {
     std::swap( other._value_holder, _value_holder );
+    std::swap( other._has_value, _has_value );
     std::swap( other._type, _type );
 }
 
 inline void any::reset()
 {
-    _type = type_id<void>;
+    _has_value = false;
 }
 
 inline type_info any::type() const
 {
-    return _type;
+    if ( _has_value )
+    {
+        return _type;
+    }
+    else
+    {
+        return type_id<void>;
+    }
 }
 
 }  // namespace fast_any
