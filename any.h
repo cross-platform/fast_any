@@ -120,7 +120,7 @@ private:
 
         inline void emplace( const value_holder_t* value_holder ) override
         {
-            value = static_cast<const value_t<T>*>( value_holder )->value;
+            value = reinterpret_cast<const value_t<T>*>( value_holder )->value;
         }
 
         T value;
@@ -212,7 +212,7 @@ inline T* any::as() const
 {
     if ( _has_value && _type == type_id<T> )
     {
-        return &static_cast<value_t<T>*>( _value_holder )->value;
+        return &reinterpret_cast<value_t<T>*>( _value_holder )->value;
     }
     else
     {
@@ -226,7 +226,7 @@ inline void any::emplace( const any& other )
 
     if ( _has_value )
     {
-        if ( _value_holder && _type == other._type )
+        if ( _type == other._type )
         {
             _value_holder->emplace( other._value_holder );
         }
@@ -245,7 +245,7 @@ inline void any::emplace( any& other )
 
     if ( _has_value )
     {
-        if ( _value_holder && _type == other._type )
+        if ( _type == other._type )
         {
             _value_holder->emplace( other._value_holder );
         }
@@ -275,9 +275,9 @@ inline void any::emplace( const T& value )
 {
     _has_value = true;
 
-    if ( _value_holder && _type == type_id<T> )
+    if ( _type == type_id<T> )
     {
-        static_cast<value_t<T>*>( _value_holder )->value = value;
+        reinterpret_cast<value_t<T>*>( _value_holder )->value = value;
     }
     else
     {
@@ -292,9 +292,9 @@ inline void any::emplace( T&& value )
 {
     _has_value = true;
 
-    if ( _value_holder && _type == type_id<T> )
+    if ( _type == type_id<T> )
     {
-        static_cast<value_t<T>*>( _value_holder )->value = std::forward<T>( value );
+        reinterpret_cast<value_t<T>*>( _value_holder )->value = std::forward<T>( value );
     }
     else
     {
