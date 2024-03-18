@@ -260,14 +260,7 @@ inline void any::emplace( any& other )
 
 inline void any::emplace( any&& other )
 {
-    _has_value = std::move( other._has_value );
-
-    if ( _has_value )
-    {
-        delete _value_holder;
-        _value_holder = std::move( other._value_holder );
-        _type = std::move( other._type );
-    }
+    swap( other );
 }
 
 template <typename T>
