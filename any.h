@@ -45,8 +45,10 @@ public:
     ~any();
 
     any( const any& other );
-    any( any& other );
     any( any&& other );
+
+    template <typename T>
+    any( const T& value );
 
     template <typename T>
     any( T&& value );
@@ -139,41 +141,25 @@ inline any::~any()
 }
 
 inline any::any( const any& other )
-    : _has_value( other._has_value )
 {
-    if ( _has_value )
-    {
-        _value_holder = other._value_holder->clone();
-        _type = other._type;
-    }
-}
-
-inline any::any( any& other )
-    : _has_value( other._has_value )
-{
-    if ( _has_value )
-    {
-        _value_holder = other._value_holder->clone();
-        _type = other._type;
-    }
+    emplace( other );
 }
 
 inline any::any( any&& other )
-    : _has_value( std::move( other._has_value ) )
 {
-    if ( _has_value )
-    {
-        _value_holder = std::move( other._value_holder );
-        _type = std::move( other._type );
-    }
+    emplace( std::forward<any>( other ) );
+}
+
+template <typename T>
+inline any::any( const T& value )
+{
+    emplace( value );
 }
 
 template <typename T>
 inline any::any( T&& value )
-    : _value_holder( new value_t<T>( std::forward<T>( value ) ) )
-    , _has_value( true )
-    , _type( type_id<T> )
 {
+    emplace( std::forward<T>( value ) );
 }
 
 inline any& any::operator=( const any& other )
