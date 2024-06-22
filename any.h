@@ -34,7 +34,7 @@ namespace fast_any
 {
 
 using type_info = unsigned int;
-inline type_info type_info_seq = 0;
+inline type_info type_info_seq = 1;
 template <typename T>
 inline const type_info type_id = type_info_seq++;
 
