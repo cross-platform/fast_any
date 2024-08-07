@@ -48,10 +48,10 @@ public:
     any( any&& other );
 
     template <typename T>
-    any( const T& value );
+    explicit any( const T& value );
 
     template <typename T>
-    any( T&& value );
+    explicit any( T&& value );
 
     any& operator=( const any& other );
     any& operator=( any&& other );
@@ -68,7 +68,6 @@ public:
     T* as() const;
 
     void emplace( const any& other );
-    void emplace( any& other );
     void emplace( any&& other );
 
     template <typename T>
@@ -103,7 +102,7 @@ private:
         value_t( const value_t& ) = delete;
         value_t& operator=( const value_t& ) = delete;
 
-        inline ~value_t() = default;
+        inline ~value_t() override = default;
 
         inline explicit value_t( const T& value )
             : value( value )
@@ -207,25 +206,6 @@ inline T* any::as() const
 }
 
 inline void any::emplace( const any& other )
-{
-    _has_value = other._has_value;
-
-    if ( _has_value )
-    {
-        if ( _type == other._type )
-        {
-            _value_holder->emplace( other._value_holder );
-        }
-        else
-        {
-            delete _value_holder;
-            _value_holder = other._value_holder->clone();
-            _type = other._type;
-        }
-    }
-}
-
-inline void any::emplace( any& other )
 {
     _has_value = other._has_value;
 
