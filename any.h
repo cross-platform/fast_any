@@ -68,6 +68,7 @@ public:
     T* as() const;
 
     void emplace( const any& other );
+    void emplace( any& other );
     void emplace( any&& other );
 
     template <typename T>
@@ -206,6 +207,25 @@ inline T* any::as() const
 }
 
 inline void any::emplace( const any& other )
+{
+    _has_value = other._has_value;
+
+    if ( _has_value )
+    {
+        if ( _type == other._type )
+        {
+            _value_holder->emplace( other._value_holder );
+        }
+        else
+        {
+            delete _value_holder;
+            _value_holder = other._value_holder->clone();
+            _type = other._type;
+        }
+    }
+}
+
+inline void any::emplace( any& other )
 {
     _has_value = other._has_value;
 
