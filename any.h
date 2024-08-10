@@ -303,7 +303,7 @@ inline type_info any::type() const
     }
     else
     {
-        return type_id<void>;
+        return 0;
     }
 }
 
