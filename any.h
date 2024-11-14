@@ -129,7 +129,6 @@ private:
     };
 
     value_holder_t* _value_holder = nullptr;
-    bool _has_value = false;
     type_info _type = 0;
 };
 
@@ -190,13 +189,13 @@ inline any& any::operator=( T&& value )
 
 inline bool any::has_value() const
 {
-    return _has_value;
+    return _type != 0;
 }
 
 template <typename T>
 inline T* any::as() const
 {
-    if ( _has_value && _type == type_id<T> )
+    if ( _type == type_id<T> )
     {
         return &reinterpret_cast<value_t<T>*>( _value_holder )->value;
     }
@@ -208,39 +207,37 @@ inline T* any::as() const
 
 inline void any::emplace( const any& other )
 {
-    _has_value = other._has_value;
-
-    if ( _has_value )
+    if ( other._type == 0 )
     {
-        if ( _type == other._type )
-        {
-            _value_holder->emplace( other._value_holder );
-        }
-        else
-        {
-            delete _value_holder;
-            _value_holder = other._value_holder->clone();
-            _type = other._type;
-        }
+        _type = 0;
+    }
+    else if ( _type == other._type )
+    {
+        _value_holder->emplace( other._value_holder );
+    }
+    else
+    {
+        delete _value_holder;
+        _value_holder = other._value_holder->clone();
+        _type = other._type;
     }
 }
 
 inline void any::emplace( any& other )
 {
-    _has_value = other._has_value;
-
-    if ( _has_value )
+    if ( other._type == 0 )
     {
-        if ( _type == other._type )
-        {
-            _value_holder->emplace( other._value_holder );
-        }
-        else
-        {
-            delete _value_holder;
-            _value_holder = other._value_holder->clone();
-            _type = other._type;
-        }
+        _type = 0;
+    }
+    else if ( _type == other._type )
+    {
+        _value_holder->emplace( other._value_holder );
+    }
+    else
+    {
+        delete _value_holder;
+        _value_holder = other._value_holder->clone();
+        _type = other._type;
     }
 }
 
@@ -252,8 +249,6 @@ inline void any::emplace( any&& other )
 template <typename T>
 inline void any::emplace( const T& value )
 {
-    _has_value = true;
-
     if ( _type == type_id<T> )
     {
         reinterpret_cast<value_t<T>*>( _value_holder )->value = value;
@@ -269,8 +264,6 @@ inline void any::emplace( const T& value )
 template <typename T>
 inline void any::emplace( T&& value )
 {
-    _has_value = true;
-
     if ( _type == type_id<T> )
     {
         reinterpret_cast<value_t<T>*>( _value_holder )->value = std::forward<T>( value );
@@ -286,25 +279,17 @@ inline void any::emplace( T&& value )
 inline void any::swap( any& other )
 {
     std::swap( other._value_holder, _value_holder );
-    std::swap( other._has_value, _has_value );
     std::swap( other._type, _type );
 }
 
 inline void any::reset()
 {
-    _has_value = false;
+    _type = 0;
 }
 
 inline type_info any::type() const
 {
-    if ( _has_value )
-    {
-        return _type;
-    }
-    else
-    {
-        return 0;
-    }
+    return _type;
 }
 
 }  // namespace fast_any
